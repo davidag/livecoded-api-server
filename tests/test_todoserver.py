@@ -4,7 +4,7 @@
 # import doctest # good for writing very simple tests...
 import unittest
 import json
-from todoserver import app, MEMORY
+from todoserver import app
 
 app.testing = True
 
@@ -15,7 +15,7 @@ def json_body(resp):
 
 class TestTodoserver(unittest.TestCase):
     def setUp(self):
-        MEMORY.clear()
+        app.store.clear()
         # verify test pre-conditions
         self.client = app.test_client()
         resp = self.client.get("/tasks/")
