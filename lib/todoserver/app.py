@@ -19,6 +19,11 @@ class TodoserverApp(Flask):
         # In Py2, super(TodoserverApp, self)
         super().__init__(name)
 
+    def erase_all_test_data(self):
+        assert self.testing
+        # This breaks a bit encapsulation but at least this method is cohesive
+        self.store.tasks.clear()
+
 app = TodoserverApp(__name__)
 
 

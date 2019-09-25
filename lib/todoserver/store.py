@@ -29,6 +29,3 @@ class TaskStore:
         task_info = self.tasks[task_id].copy()
         task_info["id"] = task_id
         return task_info
-
-    def clear(self):
-        self.tasks.clear()

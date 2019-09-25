@@ -15,7 +15,7 @@ def json_body(resp):
 
 class TestTodoserver(unittest.TestCase):
     def setUp(self):
-        app.store.clear()
+        app.erase_all_test_data()
         # verify test pre-conditions
         self.client = app.test_client()
         resp = self.client.get("/tasks/")
