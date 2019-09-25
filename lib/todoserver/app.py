@@ -1,6 +1,13 @@
 # todoserver/app.py
 
-from flask import Flask, make_response, request
+# As you import more and more things, this () form starts being really useful,
+# specially for diffs with multiple developers working.
+from flask import (
+    Flask,
+    make_response,
+    request,
+)
+
 import json
 
 app = Flask(__name__)
