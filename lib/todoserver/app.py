@@ -14,15 +14,13 @@ from .store import TaskStore
 
 
 class TodoserverApp(Flask):
-    def __init__(self, name):
-        self.store = TaskStore()
-        # In Py2, super(TodoserverApp, self)
-        super().__init__(name)
+    def init_db(self, engine_spec):
+        self.store = TaskStore(engine_spec)
 
     def erase_all_test_data(self):
         assert self.testing
         # This breaks a bit encapsulation but at least this method is cohesive
-        self.store.tasks.clear()
+        self.store._delete_all_tasks()
 
 app = TodoserverApp(__name__)
 
