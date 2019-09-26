@@ -69,3 +69,7 @@ class TestTodoserver(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
         checked_tasks = json_body(resp)
         self.assertEqual(3, len(checked_tasks))
+
+    def test_error_when_getting_nonexisting_task(self):
+        resp = self.client.get("/tasks/23/")
+        self.assertEqual(404, resp.status_code)
