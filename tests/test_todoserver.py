@@ -89,3 +89,8 @@ class TestTodoserver(unittest.TestCase):
     def test_error_when_getting_nonexisting_task(self):
         resp = self.client.get("/tasks/23/")
         self.assertEqual(404, resp.status_code)
+
+    def test_error_when_deleting_nonexisting_task(self):
+        resp = self.client.delete("/tasks/23/")
+        self.assertEqual(404, resp.status_code)
+
