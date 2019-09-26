@@ -70,6 +70,22 @@ class TestTodoserver(unittest.TestCase):
         checked_tasks = json_body(resp)
         self.assertEqual(3, len(checked_tasks))
 
+    def test_delete_task(self):
+        # create a new task
+        new_task_data = {
+            "summary": "Get milk",
+            "description": "One liter of organic milk"
+        }
+        resp = self.client.post("/tasks/", data=json.dumps(new_task_data))
+        self.assertEqual(201, resp.status_code)
+        task_id = json_body(resp)["id"]
+        # delete the task
+        resp = self.client.delete("/tasks/{:d}/".format(task_id))
+        self.assertEqual(200, resp.status_code)
+        # verify the task is really gone
+        resp = self.client.get("/tasks/{:d}/".format(task_id))
+        self.assertEqual(404, resp.status_code)
+
     def test_error_when_getting_nonexisting_task(self):
         resp = self.client.get("/tasks/23/")
         self.assertEqual(404, resp.status_code)

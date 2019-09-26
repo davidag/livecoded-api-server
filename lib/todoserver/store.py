@@ -50,6 +50,12 @@ class TaskStore:
             "description": task.description,
         }
 
+    def delete_task(self, task_id):
+        session = self.Session()
+        task = session.query(Task).get(task_id)
+        session.delete(task)
+        session.commit()
+
     def _delete_all_tasks(self):
         session = self.Session()
         session.query(Task).delete()
