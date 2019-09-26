@@ -86,6 +86,37 @@ class TestTodoserver(unittest.TestCase):
         resp = self.client.get("/tasks/{:d}/".format(task_id))
         self.assertEqual(404, resp.status_code)
 
+    def test_modify_existing_task(self):
+        # create a new task to modify
+        new_task_data = {
+            "summary": "Get milk",
+            "description": "One liter of organic milk"
+        }
+        resp = self.client.post("/tasks/", data=json.dumps(new_task_data))
+        self.assertEqual(201, resp.status_code)
+        task_id = json_body(resp)["id"]
+        # update it
+        updated_task_data = {
+            "summary": "Get almond milk",
+            "description": "Half liter of organic milk"
+        }
+        resp = self.client.put(
+            "/tasks/{:d}/".format(task_id),
+            data = json.dumps(updated_task_data)
+        )
+        self.assertEqual(200, resp.status_code)
+        # verify change
+        resp = self.client.get("/tasks/{:d}/".format(task_id))
+        check_task = json_body(resp)
+        self.assertEqual(
+            updated_task_data["summary"],
+            check_task["summary"]
+        )
+        self.assertEqual(
+            updated_task_data["description"],
+            check_task["description"]
+        )
+
     def test_error_when_getting_nonexisting_task(self):
         resp = self.client.get("/tasks/23/")
         self.assertEqual(404, resp.status_code)
@@ -94,3 +125,10 @@ class TestTodoserver(unittest.TestCase):
         resp = self.client.delete("/tasks/23/")
         self.assertEqual(404, resp.status_code)
 
+    def test_error_when_modifying_nonexisting_task(self):
+        data = {
+            "summary": "",
+            "description": "",
+        }
+        resp = self.client.put("/tasks/23/", data=json.dumps(data))
+        self.assertEqual(404, resp.status_code)
