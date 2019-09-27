@@ -1,6 +1,7 @@
 # todoserver/app.py
 
 import json
+from functools import wraps
 
 # As you import more and more things, this () form starts being really useful,
 # specially for diffs with multiple developers working.
@@ -24,6 +25,16 @@ class TodoserverApp(Flask):
 
 app = TodoserverApp(__name__)
 
+def validate_summary(view):
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        try:
+            return view(*args, **kwargs)
+        except BadSummaryError:
+            result = {"error": "Summary must be under 120 chars, without newlines"}
+            return make_response(json.dumps(result), 400)
+    return wrapper
+
 
 @app.route("/tasks/", methods=["GET"])
 def get_all_tasks():
@@ -32,35 +43,29 @@ def get_all_tasks():
 
 
 @app.route("/tasks/", methods=["POST"])
+@validate_summary
 def create_task():
     # request will always contain info about the current request
     # we're not requiring the content-type header as it's not a requirement yet
     payload = request.get_json(force=True)
     # we explicitly use keyword args as these can be potentially confused
-    try:
-        task_id = app.store.create_task(
-            summary = payload["summary"],
-            description = payload["description"],
-        )
-    except BadSummaryError:
-        result = {"error": "Summary must be under 120 chars, without newlines"}
-        return make_response(json.dumps(result), 400)
+    task_id = app.store.create_task(
+        summary = payload["summary"],
+        description = payload["description"],
+    )
     task_info = {"id": task_id}
     return make_response(json.dumps(task_info), 201)
 
 
 @app.route("/tasks/<int:task_id>/", methods=["PUT"])
+@validate_summary
 def modify_task(task_id):
     payload = request.get_json(force=True)
-    try:
-        modified = app.store.modify_task(
-            task_id,
-            payload["summary"],
-            payload["description"]
-        )
-    except BadSummaryError:
-        result = {"error": "Summary must be under 120 chars, without newlines"}
-        return make_response(json.dumps(result), 400)
+    modified = app.store.modify_task(
+        task_id,
+        payload["summary"],
+        payload["description"]
+    )
     if modified:
         return ""
     else:
