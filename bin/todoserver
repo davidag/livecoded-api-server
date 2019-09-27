@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
+import argparse
 from todoserver import app
 
+parser = argparse.ArgumentParser()
+# start with - means optional
+parser.add_argument('-d', '--debug', default=False, action='store_true')
+# start without - means mandatory
+parser.add_argument('dbfile')
+
+
 if __name__ == "__main__":
+    args = parser.parse_args(parser)
+    app.debug = args.debug
+    app.init_db('sqlite:///' + args.dbfile)
     app.run()
