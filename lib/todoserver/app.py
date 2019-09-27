@@ -49,6 +49,24 @@ def create_task():
     return make_response(json.dumps(task_info), 201)
 
 
+@app.route("/tasks/<int:task_id>/", methods=["PUT"])
+def modify_task(task_id):
+    payload = request.get_json(force=True)
+    try:
+        modified = app.store.modify_task(
+            task_id,
+            payload["summary"],
+            payload["description"]
+        )
+    except BadSummaryError:
+        result = {"error": "Summary must be under 120 chars, without newlines"}
+        return make_response(json.dumps(result), 400)
+    if modified:
+        return ""
+    else:
+        return make_response("", 404)
+
+
 @app.route("/tasks/<int:task_id>/")
 def task_details(task_id):
     task_info = app.store.get_task_details(task_id)
@@ -56,23 +74,11 @@ def task_details(task_id):
         return make_response("", 404)
     return json.dumps(task_info)
 
+
 @app.route("/tasks/<int:task_id>/", methods=["DELETE"])
 def delete_task(task_id):
     deleted = app.store.delete_task(task_id)
     if deleted:
-        return ""
-    else:
-        return make_response("", 404)
-
-@app.route("/tasks/<int:task_id>/", methods=["PUT"])
-def modify_task(task_id):
-    payload = request.get_json(force=True)
-    modified = app.store.modify_task(
-        task_id,
-        payload["summary"],
-        payload["description"]
-    )
-    if modified:
         return ""
     else:
         return make_response("", 404)

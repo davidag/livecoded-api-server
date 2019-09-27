@@ -15,6 +15,15 @@ def json_body(resp):
 
 
 class TestTodoserver(unittest.TestCase):
+    def create_test_task(self):
+        new_task_data = {
+            "summary": "Get milk",
+            "description": "One liter of organic milk"
+        }
+        resp = self.client.post("/tasks/", data=json.dumps(new_task_data))
+        self.assertEqual(201, resp.status_code)
+        return json_body(resp)
+
     def setUp(self):
         app.erase_all_test_data()
         # verify test pre-conditions
@@ -33,13 +42,7 @@ class TestTodoserver(unittest.TestCase):
     # parts of the application.
     def test_create_a_task_and_get_its_details(self):
         # create a new task
-        new_task_data = {
-            "summary": "Get milk",
-            "description": "One liter of organic milk"
-        }
-        resp = self.client.post("/tasks/", data=json.dumps(new_task_data))
-        self.assertEqual(201, resp.status_code)
-        data = json_body(resp)
+        data = self.create_test_task()
         self.assertIn("id", data)
         # get task details
         task_id = data["id"]
@@ -72,13 +75,8 @@ class TestTodoserver(unittest.TestCase):
 
     def test_delete_task(self):
         # create a new task
-        new_task_data = {
-            "summary": "Get milk",
-            "description": "One liter of organic milk"
-        }
-        resp = self.client.post("/tasks/", data=json.dumps(new_task_data))
-        self.assertEqual(201, resp.status_code)
-        task_id = json_body(resp)["id"]
+        data = self.create_test_task()
+        task_id = data["id"]
         # delete the task
         resp = self.client.delete("/tasks/{:d}/".format(task_id))
         self.assertEqual(200, resp.status_code)
@@ -88,13 +86,8 @@ class TestTodoserver(unittest.TestCase):
 
     def test_modify_existing_task(self):
         # create a new task to modify
-        new_task_data = {
-            "summary": "Get milk",
-            "description": "One liter of organic milk"
-        }
-        resp = self.client.post("/tasks/", data=json.dumps(new_task_data))
-        self.assertEqual(201, resp.status_code)
-        task_id = json_body(resp)["id"]
+        data = self.create_test_task()
+        task_id = data["id"]
         # update it
         updated_task_data = {
             "summary": "Get almond milk",
@@ -141,10 +134,34 @@ class TestTodoserver(unittest.TestCase):
         for bad_summary in bad_summaries:
             with self.subTest(bad_summary=bad_summary):
                 task_info = {
-                    "summary": "x" * 120,
+                    "summary": bad_summary,
                     "description": "",
                 }
                 resp = self.client.post("/tasks/", data=json.dumps(task_info))
+                self.assertEqual(400, resp.status_code)
+                result = json_body(resp)
+                self.assertIn("error", result)
+                self.assertEqual(
+                    "Summary must be under 120 chars, without newlines",
+                    result["error"]
+                )
+
+    def test_error_when_updating_task_with_bad_summary(self):
+        task_id = self.create_test_task()["id"]
+        bad_summaries = [
+            "x" * 120,
+            "x \nybar",
+        ]
+        for bad_summary in bad_summaries:
+            with self.subTest(bad_summary=bad_summary):
+                task_info = {
+                    "summary": bad_summary,
+                    "description": "",
+                }
+                resp = self.client.put(
+                    "/tasks/{:d}/".format(task_id),
+                    data=json.dumps(task_info)
+                )
                 self.assertEqual(400, resp.status_code)
                 result = json_body(resp)
                 self.assertIn("error", result)
