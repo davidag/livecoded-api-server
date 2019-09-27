@@ -132,3 +132,30 @@ class TestTodoserver(unittest.TestCase):
         }
         resp = self.client.put("/tasks/23/", data=json.dumps(data))
         self.assertEqual(404, resp.status_code)
+
+    def test_error_when_creating_task_with_bad_summary(self):
+        task_info = {
+            "summary": "x" * 120,
+            "description": "",
+        }
+        resp = self.client.post("/tasks/", data=json.dumps(task_info))
+        self.assertEqual(400, resp.status_code)
+        result = json_body(resp)
+        self.assertIn("error", result)
+        self.assertEqual(
+            "Summary must be under 120 chars, without newlines",
+            result["error"]
+        )
+
+        task_info = {
+            "summary": "x\n",
+            "description": "",
+        }
+        resp = self.client.post("/tasks/", data=json.dumps(task_info))
+        self.assertEqual(400, resp.status_code)
+        result = json_body(resp)
+        self.assertIn("error", result)
+        self.assertEqual(
+            "Summary must be under 120 chars, without newlines",
+            result["error"]
+        )

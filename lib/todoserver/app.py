@@ -10,7 +10,7 @@ from flask import (
     request,
 )
 
-from .store import TaskStore
+from .store import TaskStore, BadSummaryError
 
 
 class TodoserverApp(Flask):
@@ -37,10 +37,14 @@ def create_task():
     # we're not requiring the content-type header as it's not a requirement yet
     payload = request.get_json(force=True)
     # we explicitly use keyword args as these can be potentially confused
-    task_id = app.store.create_task(
-        summary = payload["summary"],
-        description = payload["description"],
-    )
+    try:
+        task_id = app.store.create_task(
+            summary = payload["summary"],
+            description = payload["description"],
+        )
+    except BadSummaryError:
+        result = {"error": "Summary must be under 120 chars, without newlines"}
+        return make_response(json.dumps(result), 400)
     task_info = {"id": task_id}
     return make_response(json.dumps(task_info), 201)
 
